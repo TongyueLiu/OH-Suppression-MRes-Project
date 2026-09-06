@@ -7,5 +7,5 @@ The coupling functions have been split into:
 """
 
 from oh_suppression.point_source_coupling import *
-from oh_suppression.coupling_vs_radius_sweeps import *
+from oh_suppression.flat_background_coupling import *
 from oh_suppression.extended_source_coupling import *

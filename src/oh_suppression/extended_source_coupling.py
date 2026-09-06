@@ -95,6 +95,7 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
         n_decentre=50, E_S=1.0, 
         n_F_grid=60, 
         F_eff=None,
+        store_2d_fields=False,
 ):
     """
     For one fibre core radius a: 
@@ -135,7 +136,7 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
         E_S=E_S
     )
 
-    E_image_opt, I_image_opt = diffraction_limited_E_field_at_fibre_2d(
+    E_image, I_image = diffraction_limited_E_field_at_fibre_2d(
         x, y,
         lam0=lam0,
         F_eff=F_eff,
@@ -169,7 +170,7 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
     eta_extended_source = eta_extended_source_2d(eta_map_2d=eta_map_2d,
         galaxy_brightness_2d=I_source, x_1d=x_1d, y_1d=y_1d)
     
-    return {
+    result = {
         "a": a,
         "V": V,
         "F_eff": F_eff,
@@ -179,9 +180,13 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
         "eta_psf": eta_psf,
         "mode_results_centred": mode_results_centred,
         "mode_results_decentre": mode_results_decentre,
-        "E_image_opt": E_image_opt,
-        "I_image_opt": I_image_opt
     }
+
+    if store_2d_fields:
+        result["E_image"] = E_image
+        result["I_image"] = I_image
+
+    return result
 
 
 def extended_source_efficiency_vs_core_radius_2d(
@@ -196,27 +201,33 @@ def extended_source_efficiency_vs_core_radius_2d(
         E_S=1.0, 
         n_F_grid=60,
         F_eff=None,
-        n_jobs=1
+        n_jobs=1, 
+        store_2d_fields=False,
 ):
     """
     Loop over core radius and calculate: 
-        - centred point source efficiency at optimal F
-        - extended source efficiency by the weighted average of a number of decentred point source efficiencies
+        - centred point-source coupling efficiency at the fixed fibre focal ratio
+        - extended-source coupling efficiency by the brightness-weighted average
+          of a number of decentred point-source coupling efficiencies
     
-    Parameters: 
+    Parameters
+    ----------
 
     core_radius_array: array of core radius values to process
     x, y, x_1d, y_1d: grid points for the field calculations
     NA: numerical aperture 
     lam0: wavelength
+    I_source: intensity distribution of the extended source, 2D numpy array, same shape as x and y grids
     alpha: central obstruction ratio
     az_sym: whether to use azimuthal symmetry
     mode_case: case for mode calculation
-    decentre_max: maximum decentre radius
+    decentre_max: maximum decentre radius. If None, use the cladding/grid radius. If "core_radius", use the fibre core radius.
     n_decentre: number of decentre points
     E_S: electric field amplitude of the point source
-    n_F_grid: number of grid points for F_eff calculation
+    n_F_grid: kept for compatibility with older notebooks, but not used in the fixed-F_eff calculation
+    F_eff: effective fibre focal ratio. If None, calculated from NA as 1 / (2 tan(arcsin(NA))).
     n_jobs: number of parallel workers. Use 1 for serial, >1 for parallel.
+    store_2d_fields: whether to store E_image and I_image in each result dictionary
 
     """
 
@@ -262,7 +273,8 @@ def extended_source_efficiency_vs_core_radius_2d(
             n_decentre=n_decentre, 
             E_S=E_S,
             n_F_grid=n_F_grid, 
-            F_eff=F_eff
+            F_eff=F_eff, 
+            store_2d_fields=False,
         )
         return row
 

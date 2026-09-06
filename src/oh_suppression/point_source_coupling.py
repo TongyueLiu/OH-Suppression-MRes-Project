@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.integrate as integrate
 
+from joblib import Parallel, delayed
+
 from oh_suppression.fibre_modes import modes, find_root_XY, lp_mode_field_2d
 from oh_suppression.image_plane_fields import diffraction_limited_E_field_at_fibre_2d
 
@@ -230,3 +232,157 @@ def eta_psf_vs_decentre_position_2d(
 
     return eta_psf, mode_results_all
 
+
+def eta_non_opt_vs_core_radius(
+    core_radius_array,
+    x, y, x_1d, y_1d,
+    lam0,
+    NA,
+    F_eff=None,
+    alpha=0.0,
+    decentre=None,
+    E_S=1.0,
+    mode_case="few_mode",
+    az_sym=True,
+    n_jobs=1,
+    store_mode_results=True,
+): 
+    """
+    Calculate the fixed-focal-ratio point-source coupling efficiency
+    for a range of fibre core radius values.
+
+    No focal-ratio optimisation is performed.
+    The same fixed F_eff is used for every core radius.
+
+    The coupling efficiency is calculated from the 2D electric-field
+    overlap integral through total_eff_2d().
+
+    Parameters
+    ----------
+    core_radius_array : array
+        Fibre core radius values [m].
+
+    x, y, x_1d, y_1d : arrays
+        2D and 1D coordinate grids at the fibre input plane [m].
+
+    lam0 : float
+        Wavelength [m].
+
+    NA : float
+        Fibre numerical aperture.
+
+    F_eff : float or None
+        Fixed effective fibre focal ratio used for all core radii.
+        If None, calculate from NA using:
+            F_eff = 1 / (2 tan(arcsin(NA)))
+
+    alpha : float
+        Central obstruction ratio.
+
+    decentre : tuple, list, or None
+        Point-source decentre position at the fibre input plane.
+        If None, the point source is centred.
+
+    E_S : float
+        Electric-field amplitude of the point source.
+
+    mode_case : str
+        Fibre mode case, for example "smf" or "few_mode".
+
+    az_sym : bool
+        Whether to include only azimuthally symmetric modes.
+
+    n_jobs : int
+        Number of parallel workers. Use n_jobs=1 for serial.
+
+    store_mode_results : bool
+        If True, store the per-mode coupling results for every core radius.
+        If False, only return total coupling efficiency.
+
+    Returns
+    -------
+    eta_total_non_opt_array : 1D numpy array
+        Total point-source coupling efficiency for each core radius.
+
+    mode_results_non_opt_array : list
+        Per-mode coupling results for each core radius.
+        If store_mode_results=False, this is None.
+
+    V_array : 1D numpy array
+        Normalised frequency values corresponding to core_radius_array.
+    """
+
+    if F_eff is None:
+        F_eff = 1 / (2 * np.tan(np.arcsin(NA)))
+
+    core_radius_array = np.asarray(core_radius_array)
+
+    V_array = 2 * np.pi * core_radius_array * NA / lam0
+
+    n_total = len(core_radius_array)
+
+    def run_one_radius(a):
+        prepared_modes = prepare_modes_2d(
+            x, y,
+            a=a,
+            NA=NA,
+            lam0=lam0,
+            az_sym=az_sym,
+            mode_case=mode_case
+        )
+
+        eta_tot, mode_results = total_eff_2d(
+            prepared_modes=prepared_modes,
+            x=x,
+            y=y,
+            x_1d=x_1d,
+            y_1d=y_1d,
+            lam0=lam0,
+            F_eff=F_eff,
+            alpha=alpha,
+            decentre=decentre,
+            E_S=E_S
+        )
+
+        if store_mode_results:
+            return eta_tot, mode_results
+        else:
+            return eta_tot, None
+
+    if n_jobs == 1:
+        eta_total_non_opt_array = []
+        mode_results_non_opt_array = [] if store_mode_results else None
+
+        checkpoints = {
+            max(1, int(np.ceil(n_total * p / 10)))
+            for p in range(1, 11)
+        }
+
+        for i, a in enumerate(core_radius_array, start=1):
+            eta_tot, mode_results = run_one_radius(a)
+
+            eta_total_non_opt_array.append(eta_tot)
+
+            if store_mode_results:
+                mode_results_non_opt_array.append(mode_results)
+
+            if i in checkpoints:
+                percent = int(round(100 * i / n_total))
+                print(f"{percent}% complete ({i}/{n_total})")
+
+    else:
+        results = Parallel(n_jobs=n_jobs, verbose=10)(
+            delayed(run_one_radius)(a)
+            for a in core_radius_array
+        )
+
+        eta_total_non_opt_array = [row[0] for row in results]
+
+        if store_mode_results:
+            mode_results_non_opt_array = [row[1] for row in results]
+        else:
+            mode_results_non_opt_array = None
+
+    eta_total_non_opt_array = np.asarray(eta_total_non_opt_array)
+
+    return eta_total_non_opt_array, mode_results_non_opt_array, V_array
