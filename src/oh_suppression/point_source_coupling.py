@@ -187,7 +187,7 @@ def total_eff_2d(
     return total, mode_results
 
 
-def eta_psf_vs_decentre_position_2d(
+def eta_psf_vs_radial_decentre_position(
         prepared_modes, 
         x, y, x_1d, y_1d, 
         lam0, F_eff, alpha, 
