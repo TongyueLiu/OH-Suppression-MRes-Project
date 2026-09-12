@@ -3,7 +3,7 @@ import scipy.integrate as integrate
 from joblib import Parallel, delayed
 
 from oh_suppression.image_plane_fields import diffraction_limited_E_field_at_fibre_2d
-from oh_suppression.point_source_coupling import prepare_modes_2d, total_eff_2d, eta_psf_vs_decentre_position_2d
+from oh_suppression.point_source_coupling import prepare_modes_2d, total_eff_2d, eta_psf_vs_radial_decentre_position
 
 def radial_efficiency_to_2d(decentre_array, eta_point_source, x, y, fibre_x=0.0, fibre_y=0.0):
     """
@@ -156,7 +156,7 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
     decentre_array = np.linspace(0, decentre_max, n_decentre)
 
     # Calculate eta_psf(d) for the range of decentre values
-    eta_psf,  mode_results_decentre = eta_psf_vs_decentre_position_2d(
+    eta_psf,  mode_results_decentre = eta_psf_vs_radial_decentre_position(
         prepared_modes, 
         x, y, x_1d, y_1d,
         lam0=lam0, F_eff=F_eff, alpha=alpha,

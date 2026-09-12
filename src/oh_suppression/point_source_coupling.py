@@ -193,7 +193,8 @@ def eta_psf_vs_radial_decentre_position(
         lam0, F_eff, alpha, 
         decentre_array, 
         E_S = 1.0, 
-        direction_angle = 0.0
+        direction_angle = 0.0, 
+        return_mode_results=True
 ):
     """
     Calculate the coupling efficiency of a point source  as a function to its decentre relative 
@@ -206,6 +207,14 @@ def eta_psf_vs_radial_decentre_position(
 
     direction_angle: the angle of offset direction in the x-y grid plane
     Assuming angle is zero for a circularly symmetric aperature
+
+    return_mode_results:
+        If True, return and store the individual mode results at every
+        decentre position.
+
+        If False, return only eta_psf and do not store mode_results.
+        This reduces memory usage for large parameter sweeps.
+        
     """
 
     eta_psf = [] # prepare array of eta_psf for each decentre coordinate
@@ -225,12 +234,22 @@ def eta_psf_vs_radial_decentre_position(
             E_S=E_S
         )
 
+        # Store total coupling efficiency.
         eta_psf.append(eta_total)
-        mode_results_all.append(mode_results)
 
+        # Only store individual mode results if requested.
+        if return_mode_results:
+            mode_results_all.append(mode_results)
+
+    # Convert list to NumPy array.
     eta_psf = np.array(eta_psf)
 
-    return eta_psf, mode_results_all
+    # Preserve the original return behaviour by default.
+    if return_mode_results:
+        return eta_psf, mode_results_all
+
+    # Otherwise return only the total coupling efficiency.
+    return eta_psf
 
 
 def eta_non_opt_vs_core_radius(
