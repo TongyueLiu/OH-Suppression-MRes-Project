@@ -17,9 +17,10 @@ def eta_background_from_psf_weights(decentre_array, eta_psf_array):
     For a flat background, the intensity is assumed to be uniform:
         I_background = I_0
 
-    Therefore I_0 cancels out in the ratio.
+    Therefore the constant I_0 cancels out in the ratio.
 
     eta_background = ∫ eta_psf(r) I_0 dA / ∫ I_0 dA
+    eta_background = ∫ eta_psf(r) dA / ∫ dA
 
     where dA = 2 pi r dr.
 
