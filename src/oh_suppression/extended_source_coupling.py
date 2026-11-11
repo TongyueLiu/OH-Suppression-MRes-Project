@@ -90,6 +90,8 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
         NA, lam0, I_source, 
         alpha=0.0, 
         az_sym=True, 
+        l_max=10,
+        m_max=5,
         mode_case="smf", 
         decentre_max=None, 
         n_decentre=50, E_S=1.0, 
@@ -123,7 +125,9 @@ def extended_source_no_opt_efficiency_at_one_radius_2d(
         NA=NA, 
         lam0=lam0,
         az_sym=az_sym, 
-        mode_case=mode_case
+        mode_case=mode_case, 
+        l_max=10,
+        m_max=5
     )
 
     eta_centre, mode_results_centred = total_eff_2d(

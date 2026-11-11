@@ -51,7 +51,8 @@ def prepare_modes_2d(
     x, y,
     a, NA, lam0,
     az_sym=True,
-    mode_case="few_mode"
+    mode_case="few_mode",
+    l_max=10, m_max=5
 ):
     """
     Prepare fibre mode fields for a fixed core radius.
@@ -61,6 +62,8 @@ def prepare_modes_2d(
     a: Core radius of the fibre [m]
     NA: Numerical aperture of the fibre
     lam0: Wavelength [m]
+    l_max: Maximum value of the orbital angular momentum quantum number
+    m_max: Maximum value of the azimuthal angular momentum quantum number
     az_sym: If True, only include azimuthally symmetric modes (l=0). If False, 
     include all modes up to l_max.
     mode_case:
@@ -80,7 +83,7 @@ def prepare_modes_2d(
             print(f"Warning: V={V:.3f} > 2.405, the fibre would support more modes than just LP01, the 'smf' case may be impractical.")
 
     elif mode_case == "few_mode":
-        allmodes = modes(V, az_sym_only=az_sym) # compute all modes supported by the fibre based on the V number
+        allmodes = modes(V, az_sym_only=az_sym, l_max=l_max, m_max=m_max) # compute all modes supported by the fibre based on the V number
 
         if az_sym:
             allmodes = [mode for mode in allmodes if mode[0] == 0] # only keep azimuthally symmetric modes if az_sym is True
@@ -262,6 +265,8 @@ def eta_non_opt_vs_core_radius(
     decentre=None,
     E_S=1.0,
     mode_case="few_mode",
+    l_max=10,
+    m_max=5,
     az_sym=True,
     n_jobs=1,
     store_mode_results=True,
@@ -347,7 +352,9 @@ def eta_non_opt_vs_core_radius(
             NA=NA,
             lam0=lam0,
             az_sym=az_sym,
-            mode_case=mode_case
+            mode_case=mode_case, 
+            l_max=l_max,
+            m_max=m_max
         )
 
         eta_tot, mode_results = total_eff_2d(

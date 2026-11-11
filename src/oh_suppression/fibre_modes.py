@@ -33,7 +33,7 @@ def cutoff(l,m):
         raise ValueError("l must be >= 0")
 
 
-def modes(V, l_max=5, m_max=5, v_margin=2e-3, az_sym_only=True): 
+def modes(V, l_max=10, m_max=5, v_margin=2e-3, az_sym_only=True): 
     """
     For each value of l, calculate the allowed values of m (if any). 
     Returns a list of modes that are supported by the fibre, sorted by their cutoff V-number.
