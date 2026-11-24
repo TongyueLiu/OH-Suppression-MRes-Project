@@ -103,7 +103,7 @@ def function_characteristic_eq(X, V, l):
         raise ValueError("l must be >= 0")
 
 
-def find_root_XY(l, m, V, eps=np.finfo(float).eps):
+def find_root_XY(l, m, V, eps=1e-12):
     """
     Calculates the two transverse propagation constants X & Y for a given
     normalised frequency and LP mode (l,m).

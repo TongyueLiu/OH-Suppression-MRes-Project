@@ -135,6 +135,8 @@ def total_eff_2d(
     prepared_modes,
     x, y, x_1d, y_1d,
     lam0, F_eff, alpha,
+    E_image=None,
+    I_image=None,
     decentre=None,
     E_S=1.0
 ):
@@ -153,14 +155,15 @@ def total_eff_2d(
     E_S: Source electric field amplitude [V/m]
     """
 
-    E_image, I_image = diffraction_limited_E_field_at_fibre_2d(
-        x, y,
-        lam0=lam0,
-        F_eff=F_eff,
-        alpha=alpha,
-        E_S=E_S,
-        decentre=decentre
-    )
+    if E_image is None or I_image is None:
+        E_image, I_image = diffraction_limited_E_field_at_fibre_2d(
+            x, y,
+            lam0=lam0,
+            F_eff=F_eff,
+            alpha=alpha,
+            E_S=E_S,
+            decentre=decentre
+        )
 
     # begin with zero efficiency when we haven't started accumulating eta for any modes
     total = 0.0
@@ -188,6 +191,7 @@ def total_eff_2d(
         })
 
     return total, mode_results
+
 
 
 def eta_psf_vs_radial_decentre_position(
